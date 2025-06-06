@@ -1,10 +1,10 @@
 package main
 
 import (
-	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 
@@ -12,7 +12,7 @@ import (
 )
 
 type Movie struct {
-	ID       int       `json:"id"`
+	ID       string    `json:"id"`
 	Isbn     string    `json:"isbn"`
 	Title    string    `json:"title"`
 	Director *Director `json:"director"`
@@ -23,7 +23,7 @@ type Director struct {
 	LastName  string `json:"last_name"`
 }
 
-var movies = []Movie
+var movies []Movie
 
 // GetMovies returns all movies
 func GetMovies(w http.ResponseWriter, r *http.Request) {
@@ -59,15 +59,30 @@ func GetMovie(w http.ResponseWriter, r *http.Request) {
 // CreateMovie
 func CreateMovie(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var movies Movie
-	_ = json.NewDecoder(r.Body).Decode(&movies)
-	movie.ID = strconv.Itoa(rand.Intn(100000000))
+	var movie Movie
+	_ = json.NewDecoder(r.Body).Decode(&movie)
+	movie.ID = strconv.Itoa(rand.Intn(10000000))
 	movies = append(movies, movie)
 	json.NewEncoder(w).Encode(movie)
 }
 
 // UpdateMovie
-func UpdateMovie(w http.ResponseWriter, r *http.Request)
+func UpdateMovie(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+
+	for index, item := range movies {
+		if item.ID == params["id"] {
+			movies = append(movies[:index], movies[index+1:]...)
+			var movie Movie
+			_ = json.NewDecoder(r.Body).Decode(&movie)
+			movie.ID = params["id"]
+			movies = append(movies, movie)
+			json.NewEncoder(w).Encode(movie)
+		}
+	}
+
+}
 
 func main() {
 	r := mux.NewRouter()
